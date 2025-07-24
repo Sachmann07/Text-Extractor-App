@@ -1,0 +1,97 @@
+import pytesseract
+from PIL import ImageGrab, Image, ImageDraw
+import keyboard
+import time
+import pyautogui
+import cv2
+import numpy as np
+import tkinter as tk
+from tkinter import messagebox
+import pyperclip
+import threading
+import pystray
+import os
+
+# --- ✅ Tesseract path (change if needed) ---
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+# --- ✅ Set OCR Language (hardcoded for now) ---
+ocr_lang = 'eng'
+
+# --- 🧠 Process image & detect dark mode ---
+def extract_text_from_image(img):
+    print("[INFO] Processing image...")
+    gray = img.convert("L")
+    hist = gray.histogram()
+    brightness = sum(i * v for i, v in enumerate(hist)) / sum(hist)
+
+    # Invert if it's dark mode (white text on black)
+    if brightness < 127:
+        print("[INFO] Detected dark mode - inverting...")
+        gray = gray.point(lambda x: 255 - x)
+
+    # OCR
+    text = pytesseract.image_to_string(gray, lang=ocr_lang)
+    return text
+
+# --- 📸 Screen selection & OCR ---
+def capture_and_extract_text():
+    print("[ACTION] User triggered screenshot...")
+    full_screenshot = pyautogui.screenshot()
+    np_image = np.array(full_screenshot)
+    bgr_image = cv2.cvtColor(np_image, cv2.COLOR_RGB2BGR)
+
+    # Let user select ROI
+    r = cv2.selectROI("Select Area", bgr_image, showCrosshair=True, fromCenter=False)
+    cv2.destroyAllWindows()
+
+    if r == (0, 0, 0, 0):
+        print("[WARN] No region selected.")
+        return
+
+    x, y, w, h = r
+    cropped = full_screenshot.crop((x, y, x + w, y + h))
+
+    # OCR
+    text = extract_text_from_image(cropped)
+
+    # Copy to clipboard and show popup
+    pyperclip.copy(text)
+    print("[INFO] Text copied to clipboard.")
+    root = tk.Tk()
+    root.withdraw()
+    messagebox.showinfo("Extracted Text", text.strip() or "No text found.")
+
+# --- 🎧 Hotkey listener thread ---
+def hotkey_listener():
+    print("[INFO] Press Ctrl + Shift + T to extract text from screen.")
+    while True:
+        if keyboard.is_pressed('ctrl+shift+t'):
+            time.sleep(0.2)
+            capture_and_extract_text()
+            time.sleep(1)
+
+# --- 🖥️ System tray icon ---
+def create_tray_icon():
+    print("[INFO] Starting tray icon...")
+
+    # Create basic icon image
+    icon_img = Image.new("RGB", (64, 64), "white")
+    draw = ImageDraw.Draw(icon_img)
+    draw.text((10, 20), "OCR", fill="black")
+
+    def on_quit(icon, item):
+        print("[EXIT] Exiting app.")
+        icon.stop()
+        os._exit(0)
+
+    icon = pystray.Icon("TextOCR", icon_img, "Text Extractor", menu=pystray.Menu(
+        pystray.MenuItem("Quit", on_quit)
+    ))
+    icon.run()
+
+# --- 🚀 Main ---
+if __name__ == "__main__":
+    print("🚀 OCR App started.")
+    threading.Thread(target=hotkey_listener, daemon=True).start()
+    create_tray_icon()
