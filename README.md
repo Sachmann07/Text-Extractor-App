@@ -10,6 +10,7 @@ A lightweight OCR tool for Windows — extract text from any part of your screen
 - 📋 Auto copies text to clipboard
 - ⚙️ Runs standalone — no Python or setup required
 - ⌨️ Hotkey: `Ctrl + Shift + T`
+- Press enter
 
 ---
 
