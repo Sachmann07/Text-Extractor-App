@@ -22,6 +22,32 @@ A lightweight OCR tool for Windows — extract text from any part of your screen
 
 ---
 
+## ⚙️ Requirements (Important)
+
+This app requires **Microsoft Visual C++ Redistributable** to run.
+
+If you see an error like:
+
+"The ordinal could not be located in the dynamic link library"
+
+Install this once:
+
+👉 Download: https://aka.ms/vs/17/release/vc_redist.x64.exe  
+(Visual C++ Redistributable 2015–2022)
+
+After installing, restart your PC and run the app again.
+
+---
+
+## 🧠 Also Required
+
+- Windows 10 / 11
+- Tesseract OCR installed  
+  Default path: `C:\Program Files\Tesseract-OCR\tesseract.exe`
+
+Download Tesseract here:  
+https://github.com/tesseract-ocr/tesseract/wiki
+
 ## 📦 Tech Stack
 - Python
 - [PyTesseract](https://github.com/madmaze/pytesseract)
